@@ -89,8 +89,22 @@ export default function SettingsPage() {
 
       <div className="card">
         <div className="card-title">このアプリについて</div>
-        <p className="muted" style={{ fontSize: 13, margin: 0 }}>
-          バイク メンテナンスノート / オフライン対応 PWA。データは端末内（IndexedDB）にのみ保存され、外部送信はされません。
+        <div className="list-item">
+          <div className="main">
+            <div className="title" style={{ fontWeight: 500 }}>
+              バイク メンテナンスノート
+            </div>
+            <div className="sub muted">オフライン対応 PWA</div>
+          </div>
+          <div className="trailing">
+            <div className="sub muted">バージョン</div>
+            <div className="title" style={{ fontWeight: 600 }}>
+              v{__APP_VERSION__}
+            </div>
+          </div>
+        </div>
+        <p className="muted" style={{ fontSize: 13, margin: '10px 0 0' }}>
+          データは端末内（IndexedDB）にのみ保存され、外部送信はされません。
         </p>
       </div>
     </>
