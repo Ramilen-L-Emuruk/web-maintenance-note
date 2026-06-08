@@ -194,6 +194,9 @@ button {
   grid-template-columns: 1fr 1fr;
   gap: 12px;
 }
+.row-2 > * {
+  min-width: 0;
+}
 .checkbox-row {
   display: flex;
   align-items: center;
