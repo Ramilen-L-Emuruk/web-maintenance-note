@@ -107,8 +107,8 @@ export default function RefuelPage() {
         )}
       </div>
 
-      <button className="btn btn-primary btn-block" onClick={() => setEditing('new')}>
-        ＋ 給油情報を新規登録
+      <button className="btn-fab" onClick={() => setEditing('new')} aria-label="給油情報を新規登録">
+        ＋
       </button>
 
       {editing && (
