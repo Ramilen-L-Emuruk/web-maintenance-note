@@ -20,7 +20,7 @@
 
 - React 18 + TypeScript + Vite
 - IndexedDB (Dexie) によるローカル永続化
-- Recharts（燃費グラフ）
+- Recharts（燃費グラフ。`React.lazy` で遅延読み込みし、初期バンドルから分離）
 - vite-plugin-pwa（Service Worker / オフライン / インストール対応）
 - ルーティングは HashRouter、`base: './'` で GitHub Pages のサブパスに非依存
 

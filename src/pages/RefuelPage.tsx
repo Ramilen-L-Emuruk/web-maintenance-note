@@ -1,18 +1,13 @@
-import { useMemo, useState } from 'react'
+import { lazy, Suspense, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import {
-  CartesianGrid,
-  Line,
-  LineChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts'
 import { db } from '../db/db'
 import { useHeaderTitle } from '../components/Layout'
 import Modal from '../components/Modal'
+
+// Recharts は重いため遅延読み込みし、初期バンドルから切り離す。
+// グラフは給油記録が2件以上ある給油画面でのみフェッチされる。
+const FuelEconomyChart = lazy(() => import('../components/FuelEconomyChart'))
 import { deleteRefuelRecord, saveRefuelRecord } from '../db/repo'
 import {
   averageFuelEconomy,
@@ -72,29 +67,9 @@ export default function RefuelPage() {
       <div className="card">
         <div className="card-title">燃費グラフ (km/L)</div>
         {chartData.length >= 2 ? (
-          <ResponsiveContainer width="100%" height={220}>
-            <LineChart data={chartData} margin={{ top: 8, right: 8, bottom: 0, left: -16 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#eef1f5" />
-              <XAxis
-                dataKey="date"
-                tickFormatter={(d) => d.slice(5)}
-                fontSize={11}
-                stroke="#66707a"
-              />
-              <YAxis fontSize={11} stroke="#66707a" />
-              <Tooltip
-                formatter={(v: number) => [`${formatNum(v)} km/L`, '燃費']}
-                labelFormatter={(l) => formatDate(l as string)}
-              />
-              <Line
-                type="monotone"
-                dataKey="economy"
-                stroke="#2563eb"
-                strokeWidth={2}
-                dot={{ r: 3 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
+          <Suspense fallback={<div className="empty">グラフを読み込み中…</div>}>
+            <FuelEconomyChart data={chartData} />
+          </Suspense>
         ) : (
           <div className="empty">燃費を計算できる給油記録が2件以上あるとグラフが表示されます。</div>
         )}
