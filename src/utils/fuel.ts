@@ -1,4 +1,4 @@
-import type { RefuelRecord } from '../types'
+﻿import type { RefuelRecord } from '../types'
 import { yearMonth } from './format'
 
 /** 1記録の走行距離（km）。 */
@@ -86,6 +86,18 @@ export function averageFuelEconomy(records: RefuelRecord[]): number | null {
 /** 当月（YYYY-MM）の記録に絞る。 */
 export function filterByMonth(records: RefuelRecord[], ym: string): RefuelRecord[] {
   return records.filter((r) => yearMonth(r.refuelDate) === ym)
+}
+
+/**
+ * 給油記録を降順ソートする。
+ * 日付が同じ場合は走行距離の降順を第2キーとする。
+ */
+export function sortRefuelRecords(records: RefuelRecord[]): RefuelRecord[] {
+  return [...records].sort((a, b) => {
+    const dateDiff = b.refuelDate.localeCompare(a.refuelDate)
+    if (dateDiff !== 0) return dateDiff
+    return recordDistance(b) - recordDistance(a)
+  })
 }
 
 /** 給油日の昇順に並べた燃費グラフ用データ。満タン給油のみプロットする。 */
