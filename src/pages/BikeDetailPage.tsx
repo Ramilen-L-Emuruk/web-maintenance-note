@@ -1,0 +1,216 @@
+import { useMemo } from 'react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useLiveQuery } from 'dexie-react-hooks'
+import { db } from '../db/db'
+import { useHeaderTitle } from '../components/Layout'
+import ReminderList from '../components/ReminderList'
+import { buildReminders } from '../utils/reminders'
+import { averageFuelEconomy, filterByMonth, recordFuelEconomy, pricePerLiter } from '../utils/fuel'
+import { formatDate, formatNum, formatYen, yearMonth } from '../utils/format'
+
+export default function BikeDetailPage() {
+  const { bikeId } = useParams()
+  const navigate = useNavigate()
+
+  const bike = useLiveQuery(() => (bikeId ? db.bikes.get(bikeId) : undefined), [bikeId])
+  const maker = useLiveQuery(
+    () => (bike?.makerId ? db.makers.get(bike.makerId) : undefined),
+    [bike?.makerId],
+  )
+  const shop = useLiveQuery(
+    () => (bike?.purchaseShopId ? db.shops.get(bike.purchaseShopId) : undefined),
+    [bike?.purchaseShopId],
+  )
+  const refuels = useLiveQuery(
+    () => (bikeId ? db.refuelRecords.where('bikeId').equals(bikeId).toArray() : []),
+    [bikeId],
+  )
+  const insuranceTypes = useLiveQuery(() => db.insuranceTypes.toArray(), [])
+  const insuranceRecords = useLiveQuery(
+    () => (bikeId ? db.insuranceRecords.where('bikeId').equals(bikeId).toArray() : []),
+    [bikeId],
+  )
+  const maintenanceParts = useLiveQuery(() => db.maintenanceParts.toArray(), [])
+  const maintenanceRecords = useLiveQuery(
+    () => (bikeId ? db.maintenanceRecords.where('bikeId').equals(bikeId).toArray() : []),
+    [bikeId],
+  )
+
+  useHeaderTitle(bike ? bike.nickname || bike.name : '読み込み中')
+
+  const lastRefuel = useMemo(() => {
+    if (!refuels || refuels.length === 0) return undefined
+    return [...refuels].sort((a, b) => b.refuelDate.localeCompare(a.refuelDate))[0]
+  }, [refuels])
+
+  const monthAvg = useMemo(() => {
+    if (!refuels) return null
+    return averageFuelEconomy(filterByMonth(refuels, yearMonth(new Date().toISOString())))
+  }, [refuels])
+  const overallAvg = useMemo(() => (refuels ? averageFuelEconomy(refuels) : null), [refuels])
+
+  const reminders = useMemo(() => {
+    if (!bike || !insuranceTypes || !insuranceRecords || !maintenanceParts || !maintenanceRecords)
+      return []
+    return buildReminders({
+      bikes: [bike],
+      insuranceTypes,
+      insuranceRecords,
+      maintenanceParts,
+      maintenanceRecords,
+    })
+  }, [bike, insuranceTypes, insuranceRecords, maintenanceParts, maintenanceRecords])
+
+  if (bike === undefined) return null
+  if (bike === null) return <div className="empty">バイクが見つかりません。</div>
+
+  const latestInsuranceByType = new Map<string, string>() // typeId -> finishDate
+  for (const r of insuranceRecords ?? []) {
+    const cur = latestInsuranceByType.get(r.insuranceTypeId)
+    if (!cur || r.finishDate > cur) latestInsuranceByType.set(r.insuranceTypeId, r.finishDate)
+  }
+
+  return (
+    <>
+      {/* 基本情報 */}
+      <div className="card">
+        {bike.images[0] && (
+          <img
+            src={bike.images[0]}
+            alt=""
+            style={{ width: '100%', height: 180, objectFit: 'cover', borderRadius: 12, marginBottom: 12 }}
+          />
+        )}
+        <div className="card-title">
+          基本情報
+          <Link to={`/bikes/${bike.id}/edit`} className="btn btn-sm">
+            編集
+          </Link>
+        </div>
+        <InfoRow label="メーカー / 車名" value={`${maker?.name ?? ''} ${bike.name}`} />
+        {bike.nickname && <InfoRow label="ニックネーム" value={bike.nickname} />}
+        {bike.displacement > 0 && <InfoRow label="排気量" value={`${bike.displacement} cc`} />}
+        {bike.frameNumber && <InfoRow label="車体番号" value={bike.frameNumber} />}
+        <InfoRow label="現在の走行距離" value={`${formatNum(bike.totalMileage, 0)} km`} />
+        {shop && <InfoRow label="購入店舗" value={shop.name} />}
+        {bike.purchaseDate && <InfoRow label="購入日" value={formatDate(bike.purchaseDate)} />}
+        <InfoRow
+          label="車検満了日"
+          value={bike.inspectionExpiryDate ? formatDate(bike.inspectionExpiryDate) : '未設定'}
+        />
+        {bike.memo && <InfoRow label="メモ" value={bike.memo} />}
+      </div>
+
+      {/* リマインド */}
+      {reminders.length > 0 && (
+        <div className="card">
+          <div className="card-title">このバイクのリマインド</div>
+          <ReminderList reminders={reminders} />
+        </div>
+      )}
+
+      {/* 給油情報 */}
+      <div className="card">
+        <div className="card-title">給油情報</div>
+        <div className="stat-grid">
+          <div className="stat">
+            <div className="label">当月の平均燃費</div>
+            <div className="value">
+              {formatNum(monthAvg)}
+              <span className="unit">km/L</span>
+            </div>
+          </div>
+          <div className="stat">
+            <div className="label">全体の平均燃費</div>
+            <div className="value">
+              {formatNum(overallAvg)}
+              <span className="unit">km/L</span>
+            </div>
+          </div>
+        </div>
+        {lastRefuel ? (
+          <div style={{ marginTop: 12 }}>
+            <div className="muted" style={{ fontSize: 13, marginBottom: 4 }}>
+              最後の給油（{formatDate(lastRefuel.refuelDate)}）
+            </div>
+            <div className="list-item">
+              <div className="main">
+                <div className="title">
+                  {formatNum(lastRefuel.refuelAmount, 2)} L / {formatYen(lastRefuel.price)}
+                </div>
+                <div className="sub">
+                  単価 {formatYen(pricePerLiter(lastRefuel))}/L ・ 燃費{' '}
+                  {formatNum(recordFuelEconomy(lastRefuel))} km/L
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="empty">給油記録がありません。</div>
+        )}
+        <button
+          className="btn btn-primary btn-block"
+          style={{ marginTop: 12 }}
+          onClick={() => navigate(`/bikes/${bike.id}/refuel`)}
+        >
+          ⛽ 給油情報を登録・管理
+        </button>
+      </div>
+
+      {/* メンテナンス情報 */}
+      <div className="card">
+        <div className="card-title">メンテナンス情報</div>
+        <div className="muted" style={{ fontSize: 13 }}>
+          記録 {maintenanceRecords?.length ?? 0} 件
+        </div>
+        <button
+          className="btn btn-primary btn-block"
+          style={{ marginTop: 12 }}
+          onClick={() => navigate(`/bikes/${bike.id}/maintenance`)}
+        >
+          🔧 メンテナンスを管理
+        </button>
+      </div>
+
+      {/* 保険情報 */}
+      <div className="card">
+        <div className="card-title">保険情報</div>
+        {insuranceTypes && insuranceTypes.length > 0 ? (
+          insuranceTypes.map((t) => {
+            const finish = latestInsuranceByType.get(t.id)
+            return (
+              <div className="list-item" key={t.id}>
+                <div className="main">
+                  <div className="title">{t.name}</div>
+                  <div className="sub">{finish ? `満了 ${formatDate(finish)}` : '未登録'}</div>
+                </div>
+              </div>
+            )
+          })
+        ) : (
+          <div className="empty">保険種別がありません。</div>
+        )}
+        <button
+          className="btn btn-primary btn-block"
+          style={{ marginTop: 12 }}
+          onClick={() => navigate(`/bikes/${bike.id}/insurance`)}
+        >
+          🛡 保険を管理
+        </button>
+      </div>
+    </>
+  )
+}
+
+function InfoRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="list-item">
+      <div className="main">
+        <div className="sub">{label}</div>
+        <div className="title" style={{ fontWeight: 500, whiteSpace: 'pre-wrap' }}>
+          {value}
+        </div>
+      </div>
+    </div>
+  )
+}
