@@ -31,7 +31,12 @@ export default function RefuelPage() {
   const [editing, setEditing] = useState<RefuelRecord | 'new' | null>(null)
 
   const sorted = useMemo(
-    () => [...(refuels ?? [])].sort((a, b) => b.refuelDate.localeCompare(a.refuelDate)),
+    () =>
+      [...(refuels ?? [])].sort((a, b) => {
+        const dateDiff = b.refuelDate.localeCompare(a.refuelDate)
+        if (dateDiff !== 0) return dateDiff
+        return recordDistance(b) - recordDistance(a)
+      }),
     [refuels],
   )
   const monthAvg = useMemo(
