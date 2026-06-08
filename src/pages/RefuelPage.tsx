@@ -15,7 +15,7 @@ import {
   fuelEconomyChartData,
   pricePerLiter,
   recordDistance,
-  recordFuelEconomy,
+  recordFuelEconomyWithHistory,
 } from '../utils/fuel'
 import { formatDate, formatNum, formatYen, today, yearMonth } from '../utils/format'
 import type { RefuelRecord } from '../types'
@@ -89,7 +89,11 @@ export default function RefuelPage() {
             >
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <strong>{formatDate(r.refuelDate)}</strong>
-                <span className="muted">{formatNum(recordFuelEconomy(r))} km/L</span>
+                <span className="muted">
+                  {r.isFullTank
+                    ? `${formatNum(recordFuelEconomyWithHistory(r, refuels ?? []))} km/L`
+                    : '- km/L'}
+                </span>
               </div>
               <div className="sub muted">
                 {formatNum(r.refuelAmount, 2)} L / {formatYen(r.price)}（単価{' '}
