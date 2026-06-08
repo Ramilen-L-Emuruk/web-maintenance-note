@@ -203,6 +203,12 @@ button {
   background: var(--surface);
   color: var(--text);
 }
+/* iOS Safari の date input はネイティブの幅制約を持つため、
+   appearance: none で解除して width: 100% を有効にする */
+.field input[type='date'] {
+  -webkit-appearance: none;
+  appearance: none;
+}
 .field textarea {
   min-height: 72px;
   resize: vertical;
