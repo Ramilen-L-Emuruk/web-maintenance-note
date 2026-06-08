@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
@@ -11,6 +11,10 @@ import { formatDate, formatNum, formatYen, yearMonth } from '../utils/format'
 export default function BikeDetailPage() {
   const { bikeId } = useParams()
   const navigate = useNavigate()
+
+  const [openBasic, setOpenBasic] = useState(false)
+  const [openRefuel, setOpenRefuel] = useState(false)
+  const [openInsurance, setOpenInsurance] = useState(false)
 
   const bike = useLiveQuery(() => (bikeId ? db.bikes.get(bikeId) : undefined), [bikeId])
   const maker = useLiveQuery(
@@ -74,31 +78,48 @@ export default function BikeDetailPage() {
     <>
       {/* 基本情報 */}
       <div className="card">
-        {bike.images[0] && (
-          <img
-            src={bike.images[0]}
-            alt=""
-            style={{ width: '100%', height: 180, objectFit: 'cover', borderRadius: 12, marginBottom: 12 }}
-          />
-        )}
-        <div className="card-title">
+        <div
+          className="card-title"
+          onClick={() => setOpenBasic((v) => !v)}
+          style={{ cursor: 'pointer' }}
+        >
           基本情報
-          <Link to={`/bikes/${bike.id}/edit`} className="btn btn-sm">
-            編集
-          </Link>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 'auto' }}>
+            <Link
+              to={`/bikes/${bike.id}/edit`}
+              className="btn btn-sm"
+              onClick={(e) => e.stopPropagation()}
+            >
+              編集
+            </Link>
+            <span style={{ fontSize: 11, color: 'var(--color-muted, #999)' }}>
+              {openBasic ? '▲' : '▼'}
+            </span>
+          </div>
         </div>
-        <InfoRow label="メーカー / 車名" value={`${maker?.name ?? ''} ${bike.name}`} />
-        {bike.nickname && <InfoRow label="ニックネーム" value={bike.nickname} />}
-        {bike.displacement > 0 && <InfoRow label="排気量" value={`${bike.displacement} cc`} />}
-        {bike.frameNumber && <InfoRow label="車体番号" value={bike.frameNumber} />}
-        <InfoRow label="現在の走行距離" value={`${formatNum(bike.totalMileage, 0)} km`} />
-        {shop && <InfoRow label="購入店舗" value={shop.name} />}
-        {bike.purchaseDate && <InfoRow label="購入日" value={formatDate(bike.purchaseDate)} />}
-        <InfoRow
-          label="車検満了日"
-          value={bike.inspectionExpiryDate ? formatDate(bike.inspectionExpiryDate) : '未設定'}
-        />
-        {bike.memo && <InfoRow label="メモ" value={bike.memo} />}
+        {openBasic && (
+          <>
+            {bike.images[0] && (
+              <img
+                src={bike.images[0]}
+                alt=""
+                style={{ width: '100%', height: 180, objectFit: 'cover', borderRadius: 12, marginBottom: 12 }}
+              />
+            )}
+            <InfoRow label="メーカー / 車名" value={`${maker?.name ?? ''} ${bike.name}`} />
+            {bike.nickname && <InfoRow label="ニックネーム" value={bike.nickname} />}
+            {bike.displacement > 0 && <InfoRow label="排気量" value={`${bike.displacement} cc`} />}
+            {bike.frameNumber && <InfoRow label="車体番号" value={bike.frameNumber} />}
+            <InfoRow label="現在の走行距離" value={`${formatNum(bike.totalMileage, 0)} km`} />
+            {shop && <InfoRow label="購入店舗" value={shop.name} />}
+            {bike.purchaseDate && <InfoRow label="購入日" value={formatDate(bike.purchaseDate)} />}
+            <InfoRow
+              label="車検満了日"
+              value={bike.inspectionExpiryDate ? formatDate(bike.inspectionExpiryDate) : '未設定'}
+            />
+            {bike.memo && <InfoRow label="メモ" value={bike.memo} />}
+          </>
+        )}
       </div>
 
       {/* リマインド */}
@@ -111,50 +132,63 @@ export default function BikeDetailPage() {
 
       {/* 給油情報 */}
       <div className="card">
-        <div className="card-title">給油情報</div>
-        <div className="stat-grid">
-          <div className="stat">
-            <div className="label">当月の平均燃費</div>
-            <div className="value">
-              {formatNum(monthAvg)}
-              <span className="unit">km/L</span>
-            </div>
-          </div>
-          <div className="stat">
-            <div className="label">全体の平均燃費</div>
-            <div className="value">
-              {formatNum(overallAvg)}
-              <span className="unit">km/L</span>
-            </div>
-          </div>
+        <div
+          className="card-title"
+          onClick={() => setOpenRefuel((v) => !v)}
+          style={{ cursor: 'pointer' }}
+        >
+          給油情報
+          <span style={{ fontSize: 11, color: 'var(--color-muted, #999)', marginLeft: 'auto' }}>
+            {openRefuel ? '▲' : '▼'}
+          </span>
         </div>
-        {lastRefuel ? (
-          <div style={{ marginTop: 12 }}>
-            <div className="muted" style={{ fontSize: 13, marginBottom: 4 }}>
-              最後の給油（{formatDate(lastRefuel.refuelDate)}）
-            </div>
-            <div className="list-item">
-              <div className="main">
-                <div className="title">
-                  {formatNum(lastRefuel.refuelAmount, 2)} L / {formatYen(lastRefuel.price)}
+        {openRefuel && (
+          <>
+            <div className="stat-grid">
+              <div className="stat">
+                <div className="label">当月の平均燃費</div>
+                <div className="value">
+                  {formatNum(monthAvg)}
+                  <span className="unit">km/L</span>
                 </div>
-                <div className="sub">
-                  単価 {formatYen(pricePerLiter(lastRefuel))}/L ・ 燃費{' '}
-                  {formatNum(recordFuelEconomy(lastRefuel))} km/L
+              </div>
+              <div className="stat">
+                <div className="label">全体の平均燃費</div>
+                <div className="value">
+                  {formatNum(overallAvg)}
+                  <span className="unit">km/L</span>
                 </div>
               </div>
             </div>
-          </div>
-        ) : (
-          <div className="empty">給油記録がありません。</div>
+            {lastRefuel ? (
+              <div style={{ marginTop: 12 }}>
+                <div className="muted" style={{ fontSize: 13, marginBottom: 4 }}>
+                  最後の給油（{formatDate(lastRefuel.refuelDate)}）
+                </div>
+                <div className="list-item">
+                  <div className="main">
+                    <div className="title">
+                      {formatNum(lastRefuel.refuelAmount, 2)} L / {formatYen(lastRefuel.price)}
+                    </div>
+                    <div className="sub">
+                      単価 {formatYen(pricePerLiter(lastRefuel))}/L ・ 燃費{' '}
+                      {formatNum(recordFuelEconomy(lastRefuel))} km/L
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="empty">給油記録がありません。</div>
+            )}
+            <button
+              className="btn btn-primary btn-block"
+              style={{ marginTop: 12 }}
+              onClick={() => navigate(`/bikes/${bike.id}/refuel`)}
+            >
+              ⛽ 給油情報を登録・管理
+            </button>
+          </>
         )}
-        <button
-          className="btn btn-primary btn-block"
-          style={{ marginTop: 12 }}
-          onClick={() => navigate(`/bikes/${bike.id}/refuel`)}
-        >
-          ⛽ 給油情報を登録・管理
-        </button>
       </div>
 
       {/* メンテナンス情報 */}
@@ -174,29 +208,42 @@ export default function BikeDetailPage() {
 
       {/* 保険情報 */}
       <div className="card">
-        <div className="card-title">保険情報</div>
-        {insuranceTypes && insuranceTypes.length > 0 ? (
-          insuranceTypes.map((t) => {
-            const finish = latestInsuranceByType.get(t.id)
-            return (
-              <div className="list-item" key={t.id}>
-                <div className="main">
-                  <div className="title">{t.name}</div>
-                  <div className="sub">{finish ? `満了 ${formatDate(finish)}` : '未登録'}</div>
-                </div>
-              </div>
-            )
-          })
-        ) : (
-          <div className="empty">保険種別がありません。</div>
-        )}
-        <button
-          className="btn btn-primary btn-block"
-          style={{ marginTop: 12 }}
-          onClick={() => navigate(`/bikes/${bike.id}/insurance`)}
+        <div
+          className="card-title"
+          onClick={() => setOpenInsurance((v) => !v)}
+          style={{ cursor: 'pointer' }}
         >
-          🛡 保険を管理
-        </button>
+          保険情報
+          <span style={{ fontSize: 11, color: 'var(--color-muted, #999)', marginLeft: 'auto' }}>
+            {openInsurance ? '▲' : '▼'}
+          </span>
+        </div>
+        {openInsurance && (
+          <>
+            {insuranceTypes && insuranceTypes.length > 0 ? (
+              insuranceTypes.map((t) => {
+                const finish = latestInsuranceByType.get(t.id)
+                return (
+                  <div className="list-item" key={t.id}>
+                    <div className="main">
+                      <div className="title">{t.name}</div>
+                      <div className="sub">{finish ? `満了 ${formatDate(finish)}` : '未登録'}</div>
+                    </div>
+                  </div>
+                )
+              })
+            ) : (
+              <div className="empty">保険種別がありません。</div>
+            )}
+            <button
+              className="btn btn-primary btn-block"
+              style={{ marginTop: 12 }}
+              onClick={() => navigate(`/bikes/${bike.id}/insurance`)}
+            >
+              🛡 保険を管理
+            </button>
+          </>
+        )}
       </div>
     </>
   )
