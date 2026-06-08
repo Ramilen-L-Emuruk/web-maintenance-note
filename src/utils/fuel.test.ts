@@ -65,9 +65,10 @@ describe('recordFuelEconomyWithHistory', () => {
     expect(recordFuelEconomyWithHistory(r, [r])).toBeNull()
   })
 
-  it('前回の満タン給油がない場合は null を返す（最初の 1 件）', () => {
-    const r = makeRecord({ isFullTank: true, previousMileage: 0, totalMileage: 200, refuelAmount: 10 })
-    expect(recordFuelEconomyWithHistory(r, [r])).toBeNull()
+  it('前回の満タン給油がない場合はその記録単体で計算する', () => {
+    // previousMileage=1000, totalMileage=1200, refuelAmount=10 → 200/10 = 20 km/L
+    const r = makeRecord({ isFullTank: true, previousMileage: 1000, totalMileage: 1200, refuelAmount: 10 })
+    expect(recordFuelEconomyWithHistory(r, [r])).toBeCloseTo(20)
   })
 
   it('前回満タン後に満タン → (今回距離 - 前回距離) / 今回燃料', () => {

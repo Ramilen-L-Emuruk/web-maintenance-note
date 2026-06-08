@@ -50,7 +50,12 @@ export function recordFuelEconomyWithHistory(
     }
   }
 
-  if (prevFullTankMileage === null || accFuel <= 0) return null
+  // 前回満タン給油がない場合はこの記録単体で計算する
+  if (prevFullTankMileage === null) {
+    const d = recordDistance(record)
+    return d > 0 && accFuel > 0 ? d / accFuel : null
+  }
+  if (accFuel <= 0) return null
   const distance = record.totalMileage - prevFullTankMileage
   if (distance <= 0) return null
   return distance / accFuel
