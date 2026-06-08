@@ -1,9 +1,10 @@
-import { describe, it, expect } from 'vitest'
+﻿import { describe, it, expect } from 'vitest'
 import {
   recordDistance,
   recordFuelEconomy,
   recordFuelEconomyWithHistory,
   averageFuelEconomy,
+  sortRefuelRecords,
 } from './fuel'
 import type { RefuelRecord } from '../types'
 
@@ -152,5 +153,66 @@ describe('averageFuelEconomy', () => {
     const b = makeRecord({ previousMileage: 200, totalMileage: 400, refuelAmount: 10, includeInFuelEconomy: false })
     // b が除外されるので 200/10 = 20 km/L
     expect(averageFuelEconomy([a, b])).toBeCloseTo(20)
+  })
+})
+
+// ── sortRefuelRecords ─────────────────────────────────────────────────────────
+
+describe('sortRefuelRecords', () => {
+  it('空配列を渡すと空配列を返す', () => {
+    expect(sortRefuelRecords([])).toEqual([])
+  })
+
+  it('日付の降順にソートする', () => {
+    const a = makeRecord({ refuelDate: '2024-01-01', previousMileage: 0, totalMileage: 100 })
+    const b = makeRecord({ refuelDate: '2024-03-01', previousMileage: 0, totalMileage: 200 })
+    const c = makeRecord({ refuelDate: '2024-02-01', previousMileage: 0, totalMileage: 300 })
+
+    const result = sortRefuelRecords([a, b, c])
+    expect(result.map((r) => r.refuelDate)).toEqual(['2024-03-01', '2024-02-01', '2024-01-01'])
+  })
+
+  it('日付が同じ場合は走行距離の降順にソートする', () => {
+    const a = makeRecord({ refuelDate: '2024-06-01', previousMileage: 1000, totalMileage: 1100 }) // 100km
+    const b = makeRecord({ refuelDate: '2024-06-01', previousMileage: 1000, totalMileage: 1300 }) // 300km
+    const c = makeRecord({ refuelDate: '2024-06-01', previousMileage: 1000, totalMileage: 1200 }) // 200km
+
+    const result = sortRefuelRecords([a, b, c])
+    expect(result.map((r) => recordDistance(r))).toEqual([300, 200, 100])
+  })
+
+  it('日付が異なる場合は走行距離に関わらず日付優先でソートする', () => {
+    const a = makeRecord({ refuelDate: '2024-01-01', previousMileage: 0, totalMileage: 500 }) // 古い・長い
+    const b = makeRecord({ refuelDate: '2024-06-01', previousMileage: 0, totalMileage: 10  }) // 新しい・短い
+
+    const result = sortRefuelRecords([a, b])
+    expect(result[0].refuelDate).toBe('2024-06-01')
+    expect(result[1].refuelDate).toBe('2024-01-01')
+  })
+
+  it('日付混在・同日混在のケースで正しくソートする', () => {
+    const a = makeRecord({ refuelDate: '2024-03-01', previousMileage: 0, totalMileage: 150 }) // 3月・150km
+    const b = makeRecord({ refuelDate: '2024-01-01', previousMileage: 0, totalMileage: 300 }) // 1月・300km
+    const c = makeRecord({ refuelDate: '2024-03-01', previousMileage: 0, totalMileage: 250 }) // 3月・250km
+    const d = makeRecord({ refuelDate: '2024-01-01', previousMileage: 0, totalMileage: 100 }) // 1月・100km
+
+    const result = sortRefuelRecords([a, b, c, d])
+    expect(result.map((r) => `${r.refuelDate}:${recordDistance(r)}`)).toEqual([
+      '2024-03-01:250',
+      '2024-03-01:150',
+      '2024-01-01:300',
+      '2024-01-01:100',
+    ])
+  })
+
+  it('元の配列を変更しない（イミュータブル）', () => {
+    const a = makeRecord({ refuelDate: '2024-01-01' })
+    const b = makeRecord({ refuelDate: '2024-06-01' })
+    const original = [a, b]
+    const originalFirst = original[0]
+
+    sortRefuelRecords(original)
+
+    expect(original[0]).toBe(originalFirst)
   })
 })

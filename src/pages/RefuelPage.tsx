@@ -1,4 +1,4 @@
-import { lazy, Suspense, useMemo, useState } from 'react'
+﻿import { lazy, Suspense, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
@@ -16,6 +16,7 @@ import {
   pricePerLiter,
   recordDistance,
   recordFuelEconomyWithHistory,
+  sortRefuelRecords,
 } from '../utils/fuel'
 import { formatDate, formatNum, formatYen, today, yearMonth } from '../utils/format'
 import type { RefuelRecord } from '../types'
@@ -30,15 +31,7 @@ export default function RefuelPage() {
   )
   const [editing, setEditing] = useState<RefuelRecord | 'new' | null>(null)
 
-  const sorted = useMemo(
-    () =>
-      [...(refuels ?? [])].sort((a, b) => {
-        const dateDiff = b.refuelDate.localeCompare(a.refuelDate)
-        if (dateDiff !== 0) return dateDiff
-        return recordDistance(b) - recordDistance(a)
-      }),
-    [refuels],
-  )
+  const sorted = useMemo(() => sortRefuelRecords(refuels ?? []), [refuels])
   const monthAvg = useMemo(
     () => (refuels ? averageFuelEconomy(filterByMonth(refuels, yearMonth(new Date().toISOString()))) : null),
     [refuels],
