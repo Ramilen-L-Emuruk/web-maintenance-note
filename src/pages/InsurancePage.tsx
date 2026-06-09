@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useIosNumericInput } from '../hooks/useIosNumericInput'
 import { useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
@@ -206,6 +207,7 @@ function InsuranceRecordForm({
   onClose: () => void
 }) {
   const [name, setName] = useState(record?.name ?? '')
+  const priceInput = useIosNumericInput('integer')
   const [price, setPrice] = useState(record ? String(record.price) : '')
   const [startDate, setStartDate] = useState(record?.startDate ?? today())
   const [finishDate, setFinishDate] = useState(record?.finishDate ?? today())
@@ -259,7 +261,7 @@ function InsuranceRecordForm({
       </div>
       <div className="field">
         <label>保険料 (円)</label>
-        <input type="number" inputMode="numeric" value={price} onChange={(e) => setPrice(e.target.value)} />
+        <input type="number" inputMode={priceInput.inputMode} onFocus={priceInput.onFocus} onBlur={priceInput.onBlur} value={price} onChange={(e) => setPrice(e.target.value)} />
       </div>
       <div className="field">
         <label>契約URL</label>

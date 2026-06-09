@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useIosNumericInput } from '../hooks/useIosNumericInput'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
@@ -16,6 +17,10 @@ export default function BikeFormPage() {
   const makers = useLiveQuery(() => db.makers.orderBy('name').toArray(), [])
   const shops = useLiveQuery(() => db.shops.orderBy('name').toArray(), [])
   const existing = useLiveQuery(() => (bikeId ? db.bikes.get(bikeId) : undefined), [bikeId])
+
+  const displacementInput = useIosNumericInput('integer')
+  const mileageAtRegistrationInput = useIosNumericInput('integer')
+  const totalMileageInput = useIosNumericInput('integer')
 
   const [makerName, setMakerName] = useState('')
   const [name, setName] = useState('')
@@ -128,7 +133,9 @@ export default function BikeFormPage() {
             <label>排気量 (cc)</label>
             <input
               type="number"
-              inputMode="numeric"
+              inputMode={displacementInput.inputMode}
+              onFocus={displacementInput.onFocus}
+              onBlur={displacementInput.onBlur}
               value={displacement}
               onChange={(e) => setDisplacement(e.target.value)}
               placeholder="400"
@@ -176,7 +183,9 @@ export default function BikeFormPage() {
             <label>登録時の走行距離 (km)</label>
             <input
               type="number"
-              inputMode="numeric"
+              inputMode={mileageAtRegistrationInput.inputMode}
+              onFocus={mileageAtRegistrationInput.onFocus}
+              onBlur={mileageAtRegistrationInput.onBlur}
               value={mileageAtRegistration}
               onChange={(e) => setMileageAtRegistration(e.target.value)}
             />
@@ -185,7 +194,9 @@ export default function BikeFormPage() {
             <label>現在の走行距離 (km)</label>
             <input
               type="number"
-              inputMode="numeric"
+              inputMode={totalMileageInput.inputMode}
+              onFocus={totalMileageInput.onFocus}
+              onBlur={totalMileageInput.onBlur}
               value={totalMileage}
               onChange={(e) => setTotalMileage(e.target.value)}
             />

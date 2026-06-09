@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useIosNumericInput } from '../hooks/useIosNumericInput'
 import { useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
@@ -223,6 +224,8 @@ function MaintenanceRecordForm({
   onClose: () => void
 }) {
   const [title, setTitle] = useState(record?.title ?? '')
+  const mileageInput = useIosNumericInput('integer')
+  const priceInput = useIosNumericInput('integer')
   const [maintenanceDate, setMaintenanceDate] = useState(record?.maintenanceDate ?? today())
   const [price, setPrice] = useState(record ? String(record.price) : '')
   const [mileage, setMileage] = useState(
@@ -273,7 +276,9 @@ function MaintenanceRecordForm({
           <label>走行距離 (km)</label>
           <input
             type="number"
-            inputMode="numeric"
+            inputMode={mileageInput.inputMode}
+            onFocus={mileageInput.onFocus}
+            onBlur={mileageInput.onBlur}
             value={mileage}
             onChange={(e) => setMileage(e.target.value)}
           />
@@ -281,7 +286,7 @@ function MaintenanceRecordForm({
       </div>
       <div className="field">
         <label>費用 (円)</label>
-        <input type="number" inputMode="numeric" value={price} onChange={(e) => setPrice(e.target.value)} />
+        <input type="number" inputMode={priceInput.inputMode} onFocus={priceInput.onFocus} onBlur={priceInput.onBlur} value={price} onChange={(e) => setPrice(e.target.value)} />
       </div>
       <ImagePicker images={images} onChange={setImages} />
       <div className="field">
@@ -310,6 +315,8 @@ function PartSettingsModal({
   typeId: string
   onClose: () => void
 }) {
+  const intervalDaysInput = useIosNumericInput('integer')
+  const intervalDistanceInput = useIosNumericInput('integer')
   const [name, setName] = useState(part?.name ?? '')
   const [intervalDays, setIntervalDays] = useState(part?.intervalDays != null ? String(part.intervalDays) : '')
   const [intervalDistance, setIntervalDistance] = useState(
@@ -354,7 +361,9 @@ function PartSettingsModal({
           <label>推奨交換間隔 (日)</label>
           <input
             type="number"
-            inputMode="numeric"
+            inputMode={intervalDaysInput.inputMode}
+            onFocus={intervalDaysInput.onFocus}
+            onBlur={intervalDaysInput.onBlur}
             value={intervalDays}
             onChange={(e) => setIntervalDays(e.target.value)}
             placeholder="未設定可"
@@ -364,7 +373,9 @@ function PartSettingsModal({
           <label>推奨交換間隔 (km)</label>
           <input
             type="number"
-            inputMode="numeric"
+            inputMode={intervalDistanceInput.inputMode}
+            onFocus={intervalDistanceInput.onFocus}
+            onBlur={intervalDistanceInput.onBlur}
             value={intervalDistance}
             onChange={(e) => setIntervalDistance(e.target.value)}
             placeholder="未設定可"
