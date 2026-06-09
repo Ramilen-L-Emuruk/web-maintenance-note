@@ -1,4 +1,5 @@
 ﻿import { lazy, Suspense, useMemo, useState } from 'react'
+import { useIosNumericInput } from '../hooks/useIosNumericInput'
 import { useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
@@ -136,6 +137,10 @@ function RefuelForm({
   lastTotalMileage: number
   onClose: () => void
 }) {
+  const previousMileageInput = useIosNumericInput('integer')
+  const totalMileageInput = useIosNumericInput('integer')
+  const refuelAmountInput = useIosNumericInput('decimal')
+  const priceInput = useIosNumericInput('integer')
   const [refuelDate, setRefuelDate] = useState(record?.refuelDate ?? today())
   const [previousMileage, setPreviousMileage] = useState(
     String(record?.previousMileage ?? lastTotalMileage),
@@ -192,7 +197,9 @@ function RefuelForm({
           <label>前回の走行距離 (km)</label>
           <input
             type="number"
-            inputMode="numeric"
+            inputMode={previousMileageInput.inputMode}
+            onFocus={previousMileageInput.onFocus}
+            onBlur={previousMileageInput.onBlur}
             value={previousMileage}
             onChange={(e) => setPreviousMileage(e.target.value)}
           />
@@ -201,7 +208,9 @@ function RefuelForm({
           <label>今回の走行距離 (km) *</label>
           <input
             type="number"
-            inputMode="numeric"
+            inputMode={totalMileageInput.inputMode}
+            onFocus={totalMileageInput.onFocus}
+            onBlur={totalMileageInput.onBlur}
             value={totalMileage}
             onChange={(e) => setTotalMileage(e.target.value)}
           />
@@ -212,7 +221,9 @@ function RefuelForm({
           <label>給油量 (L) *</label>
           <input
             type="number"
-            inputMode="decimal"
+            inputMode={refuelAmountInput.inputMode}
+            onFocus={refuelAmountInput.onFocus}
+            onBlur={refuelAmountInput.onBlur}
             step="0.01"
             value={refuelAmount}
             onChange={(e) => setRefuelAmount(e.target.value)}
@@ -222,7 +233,9 @@ function RefuelForm({
           <label>金額 (円)</label>
           <input
             type="number"
-            inputMode="numeric"
+            inputMode={priceInput.inputMode}
+            onFocus={priceInput.onFocus}
+            onBlur={priceInput.onBlur}
             value={price}
             onChange={(e) => setPrice(e.target.value)}
           />
