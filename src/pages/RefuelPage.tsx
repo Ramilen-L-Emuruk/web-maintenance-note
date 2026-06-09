@@ -1,4 +1,4 @@
-import { lazy, Suspense, useMemo, useState } from 'react'
+﻿import { lazy, Suspense, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
@@ -15,7 +15,8 @@ import {
   fuelEconomyChartData,
   pricePerLiter,
   recordDistance,
-  recordFuelEconomy,
+  recordFuelEconomyWithHistory,
+  sortRefuelRecords,
 } from '../utils/fuel'
 import { formatDate, formatNum, formatYen, today, yearMonth } from '../utils/format'
 import type { RefuelRecord } from '../types'
@@ -30,10 +31,7 @@ export default function RefuelPage() {
   )
   const [editing, setEditing] = useState<RefuelRecord | 'new' | null>(null)
 
-  const sorted = useMemo(
-    () => [...(refuels ?? [])].sort((a, b) => b.refuelDate.localeCompare(a.refuelDate)),
-    [refuels],
-  )
+  const sorted = useMemo(() => sortRefuelRecords(refuels ?? []), [refuels])
   const monthAvg = useMemo(
     () => (refuels ? averageFuelEconomy(filterByMonth(refuels, yearMonth(new Date().toISOString()))) : null),
     [refuels],
@@ -89,7 +87,11 @@ export default function RefuelPage() {
             >
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <strong>{formatDate(r.refuelDate)}</strong>
-                <span className="muted">{formatNum(recordFuelEconomy(r))} km/L</span>
+                <span className="muted">
+                  {r.isFullTank
+                    ? `${formatNum(recordFuelEconomyWithHistory(r, refuels ?? []))} km/L`
+                    : '- km/L'}
+                </span>
               </div>
               <div className="sub muted">
                 {formatNum(r.refuelAmount, 2)} L / {formatYen(r.price)}（単価{' '}
@@ -107,8 +109,8 @@ export default function RefuelPage() {
         )}
       </div>
 
-      <button className="btn btn-primary btn-block" onClick={() => setEditing('new')}>
-        ＋ 給油情報を新規登録
+      <button className="btn-fab" onClick={() => setEditing('new')} aria-label="給油情報を新規登録">
+        ＋
       </button>
 
       {editing && (

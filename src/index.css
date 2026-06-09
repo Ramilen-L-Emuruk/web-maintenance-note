@@ -85,7 +85,7 @@ button {
 .app-main {
   max-width: 760px;
   margin: 0 auto;
-  padding: 16px 16px calc(32px + env(safe-area-inset-bottom));
+  padding: 16px 16px calc(96px + env(safe-area-inset-bottom));
 }
 
 /* ---------- cards ---------- */
@@ -154,6 +154,29 @@ button {
   gap: 10px;
   flex-wrap: wrap;
 }
+.btn-fab {
+  position: fixed;
+  bottom: calc(24px + env(safe-area-inset-bottom));
+  right: 20px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  font-size: 24px;
+  line-height: 1;
+  border: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  transition: opacity 0.15s;
+}
+.btn-fab:active {
+  opacity: 0.8;
+}
 
 /* ---------- forms ---------- */
 .field {
@@ -180,6 +203,12 @@ button {
   background: var(--surface);
   color: var(--text);
 }
+/* iOS Safari の date input はネイティブの幅制約を持つため、
+   appearance: none で解除して width: 100% を有効にする */
+.field input[type='date'] {
+  -webkit-appearance: none;
+  appearance: none;
+}
 .field textarea {
   min-height: 72px;
   resize: vertical;
@@ -193,6 +222,9 @@ button {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
+}
+.row-2 > * {
+  min-width: 0;
 }
 .checkbox-row {
   display: flex;
