@@ -5,7 +5,7 @@ import { db } from '../db/db'
 import { useHeaderTitle } from '../components/Layout'
 import ReminderList from '../components/ReminderList'
 import { buildReminders } from '../utils/reminders'
-import { averageFuelEconomy, filterByMonth, recordFuelEconomy, pricePerLiter } from '../utils/fuel'
+import { averageFuelEconomy, filterByMonth, recordFuelEconomyWithHistory, pricePerLiter } from '../utils/fuel'
 import { formatDate, formatNum, formatYen, yearMonth } from '../utils/format'
 
 export default function BikeDetailPage() {
@@ -175,7 +175,7 @@ export default function BikeDetailPage() {
                     </div>
                     <div className="sub">
                       単価 {formatYen(pricePerLiter(lastRefuel))}/L ・ 燃費{' '}
-                      {formatNum(recordFuelEconomy(lastRefuel))} km/L
+                      {formatNum(recordFuelEconomyWithHistory(lastRefuel, refuels ?? []))} km/L
                     </div>
                   </div>
                 </div>

@@ -157,7 +157,7 @@ function RefuelForm({
   const amt = Number(refuelAmount)
   const ppl = amt > 0 ? Number(price) / amt : null
   const dist = Number(totalMileage) - Number(previousMileage)
-  const eco = amt > 0 && dist > 0 ? dist / amt : null
+  const eco = isFullTank && amt > 0 && dist > 0 ? dist / amt : null
 
   async function handleSave() {
     if (!totalMileage || !refuelAmount) {
