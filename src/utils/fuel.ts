@@ -15,12 +15,13 @@ export function recordFuelEconomy(r: RefuelRecord): number | null {
 /**
  * 満タン法による燃費（km/L）。
  * - isFullTank=false: 燃費計算しない → null
- * - isFullTank=true: 前回満タン給油の totalMileage を基準に、
- *   そこから今回まで（途中の非満タン分の燃料も含む）で算出する。
- *   前回の満タン給油がない場合は null。
+ * - isFullTank=true: 前回満タン給油の totalMileage を距離アンカーとし、
+ *   そこから今回まで includeInFuelEconomy=true の給油量のみ積算して算出する。
+ *   前回満タン給油がない場合は単記録フォールバック（自走行距離÷給油量）。
  *
  * allRecords は同一バイクの全給油記録を渡す。
- * includeInFuelEconomy=false の記録は集計から除外する。
+ * ソートは totalMileage 昇順（日付より走行距離が物理的順序を正確に反映する）。
+ * includeInFuelEconomy=false の満タン記録も距離アンカーとして使用する。
  */
 export function recordFuelEconomyWithHistory(
   record: RefuelRecord,
@@ -28,35 +29,45 @@ export function recordFuelEconomyWithHistory(
 ): number | null {
   if (!record.isFullTank) return null
 
-  const sorted = [...allRecords]
-    .filter((r) => r.includeInFuelEconomy)
-    .sort((a, b) => a.refuelDate.localeCompare(b.refuelDate))
+  // totalMileage 昇順でソート。日付より走行距離が物理的順序を正確に反映する。
+  // 同値の場合は refuelDate をタイブレークに使用。
+  const sorted = [...allRecords].sort(
+    (a, b) => a.totalMileage - b.totalMileage || a.refuelDate.localeCompare(b.refuelDate),
+  )
 
   const idx = sorted.findIndex((r) => r.id === record.id)
   if (idx < 0) return null
 
-  // 前回満タン給油の totalMileage と、そこ以降（今回を含む）の累積燃料を求める
-  let prevFullTankMileage: number | null = null
-  let accFuel = 0
-
-  for (let i = 0; i <= idx; i++) {
-    const r = sorted[i]
-    if (r.isFullTank && i < idx) {
-      // 対象より前の満タン給油 → 基準をリセット
-      prevFullTankMileage = r.totalMileage
-      accFuel = 0
-    } else {
-      accFuel += r.refuelAmount
+  // includeInFuelEconomy に関わらず直前の満タン記録を距離アンカーとして探す。
+  // 計算対象外の満タン記録も「その時点でタンクが満タンだった」事実は変わらないため、
+  // 次の満タン給油の距離基準点として使用する。
+  let anchorMileage: number | null = null
+  let anchorIdx = -1
+  for (let i = idx - 1; i >= 0; i--) {
+    if (sorted[i].isFullTank) {
+      anchorMileage = sorted[i].totalMileage
+      anchorIdx = i
+      break
     }
   }
 
-  // 前回満タン給油がない場合はこの記録単体で計算する
-  if (prevFullTankMileage === null) {
+  if (anchorMileage === null) {
+    // 前回満タンなし → 単記録フォールバック
     const d = recordDistance(record)
-    return d > 0 && accFuel > 0 ? d / accFuel : null
+    return d > 0 && record.refuelAmount > 0 ? d / record.refuelAmount : null
   }
+
+  // アンカーの直後から今回の記録（inclusive）まで、
+  // includeInFuelEconomy=true の給油量のみ積算する。
+  let accFuel = 0
+  for (let i = anchorIdx + 1; i <= idx; i++) {
+    if (sorted[i].includeInFuelEconomy) {
+      accFuel += sorted[i].refuelAmount
+    }
+  }
+
   if (accFuel <= 0) return null
-  const distance = record.totalMileage - prevFullTankMileage
+  const distance = record.totalMileage - anchorMileage
   if (distance <= 0) return null
   return distance / accFuel
 }
