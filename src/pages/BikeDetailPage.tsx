@@ -13,9 +13,9 @@ export default function BikeDetailPage() {
   const navigate = useNavigate()
 
   const [openBasic, setOpenBasic] = useState(false)
-  const [openRefuel, setOpenRefuel] = useState(false)
-  const [openInsurance, setOpenInsurance] = useState(false)
-  const [openMaintenance, setOpenMaintenance] = useState(false)
+  const [openRefuel, setOpenRefuel] = useState(true)
+  const [openInsurance, setOpenInsurance] = useState(true)
+  const [openMaintenance, setOpenMaintenance] = useState(true)
   const [openMaintenanceTypes, setOpenMaintenanceTypes] = useState<Set<string>>(new Set())
 
   const bike = useLiveQuery(() => (bikeId ? db.bikes.get(bikeId) : undefined), [bikeId])
@@ -79,6 +79,14 @@ export default function BikeDetailPage() {
 
   return (
     <>
+      {bike.images[0] && (
+        <img
+          src={bike.images[0]}
+          alt=""
+          style={{ width: '100%', height: 200, objectFit: 'cover', borderRadius: 12, marginBottom: 12 }}
+        />
+      )}
+
       {/* 基本情報 */}
       <div className="card">
         <div
@@ -102,13 +110,6 @@ export default function BikeDetailPage() {
         </div>
         {openBasic && (
           <>
-            {bike.images[0] && (
-              <img
-                src={bike.images[0]}
-                alt=""
-                style={{ width: '100%', height: 180, objectFit: 'cover', borderRadius: 12, marginBottom: 12 }}
-              />
-            )}
             <InfoRow label="メーカー / 車名" value={`${maker?.name ?? ''} ${bike.name}`} />
             {bike.nickname && <InfoRow label="ニックネーム" value={bike.nickname} />}
             {bike.displacement > 0 && <InfoRow label="排気量" value={`${bike.displacement} cc`} />}
