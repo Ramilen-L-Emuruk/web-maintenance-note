@@ -28,6 +28,18 @@ export function toDateInput(d: Date): string {
   return `${y}-${m}-${day}`
 }
 
+/** 現在時刻（HH:mm）。 */
+export function nowTime(): string {
+  return toTimeInput(new Date())
+}
+
+/** Date -> 'HH:mm'（input[type=time] 用、ローカル時刻）。 */
+export function toTimeInput(d: Date): string {
+  const h = String(d.getHours()).padStart(2, '0')
+  const m = String(d.getMinutes()).padStart(2, '0')
+  return `${h}:${m}`
+}
+
 /** 'YYYY-MM-DD' 等を 'YYYY年M月D日' に整形。空なら '-'。 */
 export function formatDate(iso: string | null | undefined): string {
   if (!iso) return '-'

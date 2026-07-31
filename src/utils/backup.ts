@@ -109,7 +109,11 @@ export async function importFromJson(json: string, mode: 'replace' | 'merge'): P
       await db.maintenanceRecords.bulkPut(data.maintenanceRecords ?? [])
       await db.insuranceTypes.bulkPut(data.insuranceTypes ?? [])
       await db.insuranceRecords.bulkPut(data.insuranceRecords ?? [])
-      await db.refuelRecords.bulkPut(data.refuelRecords ?? [])
+      const refuelRecords = (data.refuelRecords ?? []).map((r) => ({
+        ...r,
+        refuelTime: r.refuelTime ?? '10:00',
+      }))
+      await db.refuelRecords.bulkPut(refuelRecords)
     },
   )
 }

@@ -192,6 +192,7 @@ button {
 .field input[type='text'],
 .field input[type='number'],
 .field input[type='date'],
+.field input[type='time'],
 .field input[type='url'],
 .field select,
 .field textarea {
@@ -203,9 +204,10 @@ button {
   background: var(--surface);
   color: var(--text);
 }
-/* iOS Safari の date input はネイティブの幅制約を持つため、
+/* iOS Safari の date/time input はネイティブの幅制約を持つため、
    appearance: none で解除して width: 100% を有効にする */
-.field input[type='date'] {
+.field input[type='date'],
+.field input[type='time'] {
   -webkit-appearance: none;
   appearance: none;
 }

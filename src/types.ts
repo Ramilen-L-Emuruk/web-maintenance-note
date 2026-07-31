@@ -128,6 +128,8 @@ export interface RefuelRecord extends Timestamped {
   id: string
   bikeId: string
   refuelDate: ISODate
+  /** 給油時刻 'HH:mm' */
+  refuelTime: string
   /** 前回給油時の走行距離 km (元: LastTimeMileage) */
   previousMileage: number
   /** 今回の総走行距離 km (元: TotalMileage) */
