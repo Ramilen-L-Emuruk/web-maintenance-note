@@ -101,21 +101,27 @@ export function filterByMonth(records: RefuelRecord[], ym: string): RefuelRecord
 
 /**
  * 給油記録を降順ソートする。
- * 日付が同じ場合は走行距離の降順を第2キーとする。
+ * 日付が同じ場合は給油時刻の降順、それも同じ場合は走行距離の降順を第3キーとする。
  */
 export function sortRefuelRecords(records: RefuelRecord[]): RefuelRecord[] {
   return [...records].sort((a, b) => {
     const dateDiff = b.refuelDate.localeCompare(a.refuelDate)
     if (dateDiff !== 0) return dateDiff
+    const timeDiff = (b.refuelTime ?? '10:00').localeCompare(a.refuelTime ?? '10:00')
+    if (timeDiff !== 0) return timeDiff
     return recordDistance(b) - recordDistance(a)
   })
 }
 
-/** 給油日の昇順に並べた燃費グラフ用データ。満タン給油のみプロットする。 */
+/** 給油日時の昇順に並べた燃費グラフ用データ。満タン給油のみプロットする。 */
 export function fuelEconomyChartData(records: RefuelRecord[]) {
   return [...records]
     .filter((r) => r.includeInFuelEconomy && r.isFullTank)
-    .sort((a, b) => a.refuelDate.localeCompare(b.refuelDate))
+    .sort(
+      (a, b) =>
+        a.refuelDate.localeCompare(b.refuelDate) ||
+        (a.refuelTime ?? '10:00').localeCompare(b.refuelTime ?? '10:00'),
+    )
     .map((r) => ({
       date: r.refuelDate,
       economy: recordFuelEconomyWithHistory(r, records),

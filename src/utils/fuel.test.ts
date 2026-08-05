@@ -5,6 +5,7 @@ import {
   recordFuelEconomyWithHistory,
   averageFuelEconomy,
   sortRefuelRecords,
+  fuelEconomyChartData,
 } from './fuel'
 import type { RefuelRecord } from '../types'
 
@@ -17,6 +18,7 @@ function makeRecord(overrides: Partial<RefuelRecord> = {}): RefuelRecord {
     id: `r${seq}`,
     bikeId: 'bike1',
     refuelDate: `2024-01-${String(seq).padStart(2, '0')}`,
+    refuelTime: '10:00',
     previousMileage: 0,
     totalMileage: 100,
     price: 0,
@@ -214,5 +216,79 @@ describe('sortRefuelRecords', () => {
     sortRefuelRecords(original)
 
     expect(original[0]).toBe(originalFirst)
+  })
+
+  it('日付が同じ場合は給油時刻の降順が走行距離より優先される', () => {
+    const a = makeRecord({
+      refuelDate: '2024-06-01',
+      refuelTime: '09:00',
+      previousMileage: 0,
+      totalMileage: 500, // 500km だが時刻が早い
+    })
+    const b = makeRecord({
+      refuelDate: '2024-06-01',
+      refuelTime: '18:30',
+      previousMileage: 0,
+      totalMileage: 100, // 100km だが時刻が遅い
+    })
+
+    const result = sortRefuelRecords([a, b])
+    expect(result.map((r) => r.refuelTime)).toEqual(['18:30', '09:00'])
+  })
+
+  it('日付・時刻が同じ場合は走行距離の降順にフォールバックする', () => {
+    const a = makeRecord({
+      refuelDate: '2024-06-01',
+      refuelTime: '10:00',
+      previousMileage: 1000,
+      totalMileage: 1100, // 100km
+    })
+    const b = makeRecord({
+      refuelDate: '2024-06-01',
+      refuelTime: '10:00',
+      previousMileage: 1000,
+      totalMileage: 1300, // 300km
+    })
+
+    const result = sortRefuelRecords([a, b])
+    expect(result.map((r) => recordDistance(r))).toEqual([300, 100])
+  })
+
+  it('refuelTime が欠落したレコードが混在しても例外を投げず 10:00 扱いになる', () => {
+    const a = makeRecord({ refuelDate: '2024-06-01', refuelTime: '12:00' })
+    const b = { ...makeRecord({ refuelDate: '2024-06-01' }), refuelTime: undefined } as unknown as RefuelRecord
+
+    expect(() => sortRefuelRecords([a, b])).not.toThrow()
+    const result = sortRefuelRecords([a, b])
+    expect(result[0]).toBe(a) // 12:00 > 10:00(既定値)
+  })
+})
+
+// ── fuelEconomyChartData ────────────────────────────────────────────────────────
+
+describe('fuelEconomyChartData', () => {
+  it('日付が同じ場合は給油時刻の昇順にソートする', () => {
+    // 走行距離・total mileage の連続性が崩れないよう previousMileage を揃えて渡すが、
+    // 引数の順序（後→先）と時刻の前後関係が逆になるケースで検証する。
+    const later = makeRecord({
+      refuelDate: '2024-06-01',
+      refuelTime: '18:00',
+      previousMileage: 200,
+      totalMileage: 400,
+      refuelAmount: 10,
+      price: 1800, // 180円/L
+    })
+    const earlier = makeRecord({
+      refuelDate: '2024-06-01',
+      refuelTime: '08:00',
+      previousMileage: 0,
+      totalMileage: 200,
+      refuelAmount: 10,
+      price: 800, // 80円/L
+    })
+
+    // 配列には「後の時刻→先の時刻」の順で渡す
+    const result = fuelEconomyChartData([later, earlier])
+    expect(result.map((d) => d.pricePerLiter)).toEqual([80, 180])
   })
 })

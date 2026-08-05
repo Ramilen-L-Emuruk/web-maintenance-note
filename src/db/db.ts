@@ -36,6 +36,16 @@ export class MaintenanceNoteDB extends Dexie {
       insuranceRecords: 'id, bikeId, insuranceTypeId, finishDate',
       refuelRecords: 'id, bikeId, refuelDate',
     })
+    this.version(2)
+      .stores({})
+      .upgrade(async (tx) => {
+        await tx
+          .table('refuelRecords')
+          .toCollection()
+          .modify((r) => {
+            if (!r.refuelTime) r.refuelTime = '10:00'
+          })
+      })
   }
 }
 

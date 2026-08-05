@@ -19,7 +19,7 @@ import {
   recordFuelEconomyWithHistory,
   sortRefuelRecords,
 } from '../utils/fuel'
-import { formatDate, formatNum, formatYen, today, yearMonth } from '../utils/format'
+import { formatDate, formatNum, formatYen, nowTime, today, yearMonth } from '../utils/format'
 import type { RefuelRecord } from '../types'
 
 export default function RefuelPage() {
@@ -87,7 +87,9 @@ export default function RefuelPage() {
               style={{ cursor: 'pointer' }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <strong>{formatDate(r.refuelDate)}</strong>
+                <strong>
+                  {formatDate(r.refuelDate)} {r.refuelTime ?? '10:00'}
+                </strong>
                 <span className="muted">
                   {r.isFullTank
                     ? `${formatNum(recordFuelEconomyWithHistory(r, refuels ?? []))} km/L`
@@ -142,6 +144,7 @@ function RefuelForm({
   const refuelAmountInput = useIosNumericInput('decimal')
   const priceInput = useIosNumericInput('integer')
   const [refuelDate, setRefuelDate] = useState(record?.refuelDate ?? today())
+  const [refuelTime, setRefuelTime] = useState(record ? (record.refuelTime ?? '10:00') : nowTime())
   const [previousMileage, setPreviousMileage] = useState(
     String(record?.previousMileage ?? lastTotalMileage),
   )
@@ -168,6 +171,7 @@ function RefuelForm({
       id: record?.id,
       bikeId,
       refuelDate,
+      refuelTime,
       previousMileage: Number(previousMileage) || 0,
       totalMileage: Number(totalMileage) || 0,
       price: Number(price) || 0,
@@ -188,9 +192,15 @@ function RefuelForm({
 
   return (
     <Modal title={record ? '給油情報を編集' : '給油情報を登録'} onClose={onClose}>
-      <div className="field">
-        <label>給油日</label>
-        <input type="date" value={refuelDate} onChange={(e) => setRefuelDate(e.target.value)} />
+      <div className="row-2">
+        <div className="field">
+          <label>給油日</label>
+          <input type="date" value={refuelDate} onChange={(e) => setRefuelDate(e.target.value)} />
+        </div>
+        <div className="field">
+          <label>給油時刻</label>
+          <input type="time" value={refuelTime} onChange={(e) => setRefuelTime(e.target.value)} />
+        </div>
       </div>
       <div className="row-2">
         <div className="field">
