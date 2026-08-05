@@ -112,9 +112,14 @@
 
 有料化した場合のメリット: 上記3つが全て解消し、AltStore Classicの週次メンテナンスも不要になる（Ad-Hoc配布やTestFlightに切り替え可能）。Cloudflare同期は有料化後もそのまま使い続けて問題ない。
 
-### 7.2 リポジトリ構成
-- 現行の `web-maintenance-note` リポジトリに Xcode プロジェクトを同居させるか、別リポジトリとして切り出すか未決定。
-- Web版は完全移行・メンテナンス終了の方針のため、**別リポジトリとして新規に立ち上げる**のが自然と思われるが、最終決定はMac側の作業開始時に行う。
+### 7.2 リポジトリ構成 → 決定済み（2026-08-06）
+- 別リポジトリ `native-maintenance-note` として新規作成済み。
+  https://github.com/Ramilen-L-Emuruk/native-maintenance-note
+- `.gitignore`: GitHub公式 Swift.gitignore
+- `LICENSE`: MIT
+- Bundle Identifier: `com.ramilen.nativemaintenancenote`（3.1 参照、以降変更しない）
+- Xcode 26.6 で iOS App テンプレート（SwiftUI, Swift, SwiftData）から初期プロジェクトを生成済み。
+  配置: `native-maintenance-note/NativeMaintenanceNote/`（Xcode標準の1階層ネスト構成）
 
 ### 7.3 CLAUDE.md の作り直し
 - 現行の CLAUDE.md は npm/tsc/Vite/PowerShell 前提で書かれており、Swift/Xcode 用に全面的に書き直しが必要（ビルド確認コマンド、テスト方針、コミット規約等）。
@@ -125,8 +130,8 @@
 
 > **順序の意図**: 7.1（無料/有料判断）は §4 の Background Modes 検証結果に依存する。実装計画（フェーズ分割）を先に固めても、検証結果次第でGPS設計・同期方式の前提が変わり得るため、**検証と土台固めを実装計画より先に行う**。
 
-1. リポジトリ構成を決定（新規リポジトリ推奨、7.2 参照）
-2. **Bundle Identifier を確定し固定する**（3.1 参照）。AltStore Classic での再ビルド・再署名を繰り返す前提のため、ここでブレるとSwiftDataのローカルデータ消失リスクに直結する。プロジェクト作成時点で確定させ、以降変更しない。
+1. ~~リポジトリ構成を決定~~ → 完了。`native-maintenance-note` として新規作成済み（7.2 参照）。
+2. ~~Bundle Identifier を確定し固定する~~ → 完了。`com.ramilen.nativemaintenancenote`（3.1, 7.2 参照）。
 3. **実機での Background Modes（GPS）検証を最優先で実施**し、7.1 の無料/有料判断を確定させる。この結果が同期方式（CloudKit採用可否）・GPSロギング設計の前提を左右するため、他の実装より前に行う。
 4. `planner` エージェント or 計画モードで、以下のフェーズ分割を実装計画に落とし込む（3 の検証結果を踏まえて着手）
    - データモデル（SwiftData）設計
