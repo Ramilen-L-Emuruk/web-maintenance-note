@@ -126,6 +126,20 @@ web-maintenance-note（バイク メンテナンスノート）で作業する�
 - **検証用に起動した dev サーバーはセッション中は停止せず、次の検証で再利用する**（都度起動し直さない）。稼働中のサーバー（既定 5173）へ Playwright で接続する。
 - **停止するときはポート指定で対象プロセスのみ終了させる**。`Stop-Process -Name node` のような一括停止は MCP サーバー等の他プロセスを巻き込むため使わない。
 
+## エージェント定義の置き場所
+
+`.claude/agents/` に置いて Git 管理するのは `adversarial-reviewer` / `doc-objectivity-reviewer` / `meta-reviewer` の 3 件だけ。
+
+**固定するかどうかは、レビュー工程そのものを構成する役か、分析の観点を足す役かで決める。** 走る頻度や規模条件では決めない。前 2 つはレビュー本体、`meta-reviewer` はその出力（CRITICAL / HIGH の指摘）を検証する役で、いずれも工程を構成する。`silent-failure-hunter`・`code-explorer` は観点を足すだけなので固定しない。
+
+固定する目的は、レビュー本体が各マシンのユーザーレベル設定（`~/.claude/agents/`）の差で欠落しないようにすること。観点役（`silent-failure-hunter`・`code-explorer`）はユーザーレベル依存のままなので、中規模の敵対的レビューと大規模のドキュメント客観レビューは環境によって片方を欠いた状態で走りうる。
+
+中身は現時点でユーザーレベルの同名ファイルと一致している。固定している以上、ユーザーレベル側を更新してもこちらへは伝わらない。揃えたいときは意識してコピーし直すこと。
+
+同名ファイルをプロジェクト側に置くとユーザーレベル版を隠すので、上の 3 件以外はコピーしない。追跡対象の管理は `.gitignore` の該当節を参照。
+
+ユーザーレベル版は検出観点としては使えるが、コード例が Java 中心のものがある（例: `silent-failure-hunter`）。例示はこのプロジェクト（TypeScript / React / Vitest / Dexie）に読み替えること。
+
 ## 敵対的レビュー
 
 **全変更（コード・ドキュメント問わず）でエージェントによる敵対的レビューを実施する**。目的:
@@ -144,8 +158,6 @@ web-maintenance-note（バイク メンテナンスノート）で作業する�
 | 小規模 | 1〜2 ファイルの typo/スタイル修正・軽微なパラメータ調整 | `adversarial-reviewer` 1 エージェント |
 | 中規模 | 機能追加・複数ファイル・条件分岐の変更 | `adversarial-reviewer` + `silent-failure-hunter` の並列 2 エージェント |
 | 大規模 | アーキテクチャ変更・複数機能横断 | 領域別に `adversarial-reviewer` を複数並列 ＋ **機能間競合レビュー**（機能 A × 機能 B の相互作用等）＋ **メタレビュー**（`meta-reviewer` で CRITICAL/HIGH の実装からの再検証） |
-
-`adversarial-reviewer` / `meta-reviewer` の定義は [`.claude/agents/`](.claude/agents/) にある。
 
 ### レビュー観点（全エージェント共通）
 

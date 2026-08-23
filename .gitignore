@@ -18,3 +18,13 @@ yarn-error.log*
 # Claude Code が作るワークツリー・検証用スクリーンショット（Git 管理対象外）
 .claude/worktrees/
 .claude/screenshots/
+
+# .claude/agents/ 配下はホワイトリスト方式:
+#   既定で追跡せず、リポジトリ側で固定するものだけ ! で再包含する。
+#   どれを固定するかの方針は CLAUDE.md「エージェント定義の置き場所」を参照。
+#   追跡するファイルを増やすときは ! の行を必ず足すこと（追跡だけして
+#   再包含を忘れると、一度 untracked に戻った時点で静かに追跡から漏れる）。
+.claude/agents/*
+!.claude/agents/adversarial-reviewer.md
+!.claude/agents/doc-objectivity-reviewer.md
+!.claude/agents/meta-reviewer.md
