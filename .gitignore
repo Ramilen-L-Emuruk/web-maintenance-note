@@ -14,3 +14,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .playwright-mcp
+
+# Claude Code が作るワークツリー・検証用スクリーンショット（Git 管理対象外）
+.claude/worktrees/
+.claude/screenshots/
