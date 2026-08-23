@@ -265,7 +265,7 @@ main を書き換える唯一の手続き。**具体的な手順は `release` �
 - **公開 API には明示的な型を付ける** — export する関数の引数と戻り値。ローカル変数は推論に任せる。同じインラインのオブジェクト形が繰り返し現れたら名前付きの型に切り出す。
 - **`interface` と `type` を使い分ける** — オブジェクトの形は `interface`、ユニオン・交差・タプル・マップ型・別名は `type`。`enum` は使わず文字列リテラルのユニオンにする。
 - **`any` を使わない** — 外部から来る値・信頼できない入力は `unknown` で受けてから絞り込む（`error instanceof Error` 等）。呼び出し側で型が決まるなら generics にする。
-  - **例外**: TypeScript の標準型定義に無い実験的な Web API。現状は `src/utils/notify.ts` の Periodic Background Sync だけ。使用箇所を最小限に閉じ込め、標準の型で書けない理由をコメントに残す（`notify.ts` の 2 箇所は理由が未記載）。
+  - **例外**: TypeScript の標準型定義に無い実験的な Web API。現状は `src/utils/notify.ts` の Periodic Background Sync だけ。使用箇所を最小限に閉じ込め、標準の型で書けない理由をコメントに残す（`notify.ts` が手本）。
 - **コンポーネントの props は型注釈を省略しない** — 書き方は名前付きの `interface Props` とインラインのオブジェクト型（`{ data }: { data: FuelEconomyPoint[] }`）が混在している。どちらでもよく、既存を揃え直す必要はない。コールバックも型を明示する（`onClose: () => void`）。`React.FC` は使わない。
 
 ## コメント・ドキュメント整合性チェック
