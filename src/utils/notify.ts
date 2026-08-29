@@ -62,8 +62,11 @@ export async function notifyReminders(reminders: Reminder[]): Promise<void> {
 /** Periodic Background Sync を登録（対応ブラウザのみ）。 */
 export async function registerPeriodicSync(): Promise<void> {
   try {
+    // Periodic Background Sync は標準の型定義に無いため any で受ける。
+    // lib.dom.d.ts に ServiceWorkerRegistration.periodicSync が存在しない。
     const reg: any = await navigator.serviceWorker?.ready
     if (reg && 'periodicSync' in reg) {
+      // 同様に PermissionName が 'periodic-background-sync' を含まないため any にする。
       const status = await (navigator as any).permissions?.query({ name: 'periodic-background-sync' })
       if (!status || status.state === 'granted') {
         await reg.periodicSync.register('check-reminders', {

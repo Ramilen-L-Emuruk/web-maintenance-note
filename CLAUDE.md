@@ -126,6 +126,23 @@ web-maintenance-note（バイク メンテナンスノート）で作業する�
 - **検証用に起動した dev サーバーはセッション中は停止せず、次の検証で再利用する**（都度起動し直さない）。稼働中のサーバー（既定 5173）へ Playwright で接続する。
 - **停止するときはポート指定で対象プロセスのみ終了させる**。`Stop-Process -Name node` のような一括停止は MCP サーバー等の他プロセスを巻き込むため使わない。
 
+## エージェント・スキルの置き場所
+
+リポジトリ側に置いて Git 管理するのは次の 4 件だけ。
+
+- `.claude/agents/` — `adversarial-reviewer` / `doc-objectivity-reviewer` / `meta-reviewer`
+- `.claude/skills/` — `release`
+
+**固定するかどうかは、工程の実行そのものを担うか、その成果物を検証するかで決める。** 走る頻度や規模条件では決めない。`adversarial-reviewer` と `doc-objectivity-reviewer` はレビューの実行そのもの、`meta-reviewer` は敵対的レビューが大規模構成で出した CRITICAL / HIGH を再検証する役（ドキュメント客観レビューには関与しない）、`release` はリリース工程の手順そのもの。`silent-failure-hunter`・`code-explorer` は既存の工程に観点を持ち込むだけなので固定しない。
+
+固定する目的は、工程の中核が各マシンのユーザーレベル設定（`~/.claude/agents/`・`~/.claude/skills/`）の差で欠落しないようにすること。観点役（`silent-failure-hunter`・`code-explorer`）はユーザーレベル依存のままなので、中規模の敵対的レビューと大規模のドキュメント客観レビューは環境によって片方を欠いた状態で走りうる。
+
+4 件はいずれも中身が現時点でユーザーレベルの同名ファイルと一致している。固定している以上、ユーザーレベル側を更新してもこちらへは伝わらない。揃えたいときは意識してコピーし直すこと。
+
+同名のものをプロジェクト側に置くとユーザーレベル版を隠すので、上の 4 件以外はコピーしない。追跡対象の管理は `.gitignore` の該当節を参照。
+
+ユーザーレベル版は検出観点としては使えるが、コード例が Java 中心のものがある（例: `silent-failure-hunter`）。例示はこのプロジェクト（TypeScript / React / Vitest / Dexie）に読み替えること。
+
 ## 敵対的レビュー
 
 **全変更（コード・ドキュメント問わず）でエージェントによる敵対的レビューを実施する**。目的:
@@ -144,8 +161,6 @@ web-maintenance-note（バイク メンテナンスノート）で作業する�
 | 小規模 | 1〜2 ファイルの typo/スタイル修正・軽微なパラメータ調整 | `adversarial-reviewer` 1 エージェント |
 | 中規模 | 機能追加・複数ファイル・条件分岐の変更 | `adversarial-reviewer` + `silent-failure-hunter` の並列 2 エージェント |
 | 大規模 | アーキテクチャ変更・複数機能横断 | 領域別に `adversarial-reviewer` を複数並列 ＋ **機能間競合レビュー**（機能 A × 機能 B の相互作用等）＋ **メタレビュー**（`meta-reviewer` で CRITICAL/HIGH の実装からの再検証） |
-
-`adversarial-reviewer` / `meta-reviewer` の定義は [`.claude/agents/`](.claude/agents/) にある。
 
 ### レビュー観点（全エージェント共通）
 
@@ -244,6 +259,14 @@ main を書き換える唯一の手続き。**具体的な手順は `release` �
   - 更新には `npm version patch|minor|major` を使う（ファイル更新・コミット作成・タグ作成まで自動で行う）。
 - **push は GitHub Actions のデプロイを起動する。** 統合後の検証（本番ビルド + `npm run preview` でのブラウザ確認）を通してから push する。
 - プッシュ時はタグも一緒に送る: `git push --follow-tags`
+
+## TypeScript の型付け
+
+- **公開 API には明示的な型を付ける** — export する関数の引数と戻り値。ローカル変数は推論に任せる。同じインラインのオブジェクト形が繰り返し現れたら名前付きの型に切り出す。
+- **`interface` と `type` を使い分ける** — オブジェクトの形は `interface`、ユニオン・交差・タプル・マップ型・別名は `type`。`enum` は使わず文字列リテラルのユニオンにする。
+- **`any` を使わない** — 外部から来る値・信頼できない入力は `unknown` で受けてから絞り込む（`error instanceof Error` 等）。呼び出し側で型が決まるなら generics にする。
+  - **例外**: TypeScript の標準型定義に無い実験的な Web API。現状は `src/utils/notify.ts` の Periodic Background Sync だけ。使用箇所を最小限に閉じ込め、標準の型で書けない理由をコメントに残す（`notify.ts` が手本）。
+- **コンポーネントの props は型注釈を省略しない** — 書き方は名前付きの `interface Props` とインラインのオブジェクト型（`{ data }: { data: FuelEconomyPoint[] }`）が混在している。どちらでもよく、既存を揃え直す必要はない。コールバックも型を明示する（`onClose: () => void`）。`React.FC` は使わない。
 
 ## コメント・ドキュメント整合性チェック
 
