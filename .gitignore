@@ -38,3 +38,9 @@ yarn-error.log*
 !.claude/skills/release/
 .claude/skills/release/*
 !.claude/skills/release/SKILL.md
+# dotagents: Codex temporary output
+.codex/worktrees/
+.codex/logs/
+.codex/screenshots/
+.codex/release.lock
+.codex/import-backup/
