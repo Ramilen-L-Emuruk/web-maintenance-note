@@ -28,6 +28,7 @@ yarn-error.log*
 #   その直後に <dir>/* で再度 ignore してから目的のファイルを ! で拾う。
 #   この 1 行を省くと release/ に置いたメモが黙って追跡される。
 .claude/*
+!.claude/writeback/
 !.claude/agents/
 .claude/agents/*
 !.claude/agents/adversarial-reviewer.md
